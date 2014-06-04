@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+
+    Copyright (C) 2003-2014 eXo Platform SAS.
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Affero General Public License
+    as published by the Free Software Foundation; either version 3
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, see<http://www.gnu.org/licenses/>.
+
+-->
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd http://www.exoplatform.org/xml/ns/kernel_1_2.xsd"
+               xmlns="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd">
+  <component>
+    <key>org.exoplatform.social.core.storage.SOCContext</key>
+    <type>org.exoplatform.social.core.storage.SOCContext</type>
+    <init-params>
+      <value-param>
+        <name>exo.social.interval.activity.persist.threshold</name>
+        <value>20000</value>
+      </value-param>
+      <value-param>
+        <name>exo.social.activity.limit.persist.threshold</name>
+        <value>200</value>
+      </value-param>
+    </init-params>
+  </component>
+  
+  <component>
+    <key>org.exoplatform.social.core.storage.memory.mbean.InMemoryActivityMbean</key>
+    <type>org.exoplatform.social.core.storage.memory.mbean.InMemoryActivityMbean</type>
+  </component>
+  
+  <component>
+    <key>org.exoplatform.social.core.storage.memory.InMemoryActivityStorage</key>
+    <type>org.exoplatform.social.core.storage.memory.InMemoryActivityStorage</type>
+  </component>
+
+  <component>
+    <key>org.exoplatform.social.core.storage.memory.InMemoryActivityStorageImpl</key>
+    <type>org.exoplatform.social.core.storage.memory.InMemoryActivityStorageImpl</type>
+  </component>
+  
+  <component>
+    <key>org.exoplatform.social.core.manager.memory.InMemoryActivityManagerImpl</key>
+    <type>org.exoplatform.social.core.manager.memory.InMemoryActivityManagerImpl</type>
+    <component-plugins>
+      <component-plugin>
+        <name>OSHtmlSanitizer</name>
+        <set-method>addProcessorPlugin</set-method>
+        <type>org.exoplatform.social.core.processor.OSHtmlSanitizerProcessor</type>
+        <init-params>
+          <value-param>
+            <name>priority</name>
+            <description>priority of this processor (lower are executed first)</description>
+            <value>3</value>
+          </value-param>
+        </init-params>
+      </component-plugin>
+    </component-plugins>
+  </component>
+  
+  <external-component-plugins>
+    <target-component>org.exoplatform.social.core.manager.ActivityManager</target-component>
+    <component-plugin>
+      <name>ActivityManagerPlugin</name>
+      <set-method>addPlugin</set-method>
+      <type>org.exoplatform.social.core.manager.memory.InMemoryActivityManagerImpl</type>
+    </component-plugin>
+  </external-component-plugins>
+
+</configuration>
