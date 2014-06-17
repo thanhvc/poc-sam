@@ -24,8 +24,9 @@ import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.storage.SOCContext;
 import org.exoplatform.social.core.storage.activity.DataChangeListener;
 import org.exoplatform.social.core.storage.activity.DataModel;
-import org.exoplatform.social.core.storage.activity.DataStatus;
 import org.exoplatform.social.core.storage.cache.model.data.ActivityData;
+import org.exoplatform.social.core.storage.cache.model.data.DataStatus;
+import org.exoplatform.social.core.storage.cache.model.data.InMemoryActivityData;
 import org.exoplatform.social.core.storage.cache.model.key.ActivityKey;
 import org.exoplatform.social.core.storage.impl.ActivityStorageImpl;
 import org.exoplatform.social.core.storage.memory.ActivityUtils;
@@ -52,7 +53,7 @@ public class CachedListener<M extends ExoSocialActivity> extends DataChangeListe
   @Override
   public void onAddActivity(ExoSocialActivity activity) {
     ActivityKey key = ActivityUtils.key(activity);
-    ActivityData data = new ActivityData(activity, DataStatus.TRANSIENT);
+    ActivityData data = new InMemoryActivityData(activity, DataStatus.TRANSIENT);
     activityCache.put(key, data);
   }
   
@@ -60,16 +61,16 @@ public class CachedListener<M extends ExoSocialActivity> extends DataChangeListe
   public void onAddComment(M activity, M comment) {
     ActivityKey key = ActivityUtils.key(activity);
     ActivityData data = activityCache.get(key);
-    if (data != null && DataStatus.PERSISTENTED.equals(data.getStatus())) {
-      data = new ActivityData(activity, DataStatus.CHANGED);
+    if (data != null && DataStatus.PERSISTENTED.equals(ActivityUtils.getDataStatus(data))) {
+      data = new InMemoryActivityData(activity, DataStatus.CHANGED);
     } else {
-      data = new ActivityData(activity, DataStatus.TRANSIENT);
+      data = new InMemoryActivityData(activity, DataStatus.TRANSIENT);
     }
     activityCache.put(key, data);
     
     //comment
     ActivityKey commentKey = ActivityUtils.key(comment);
-    ActivityData commentData = new ActivityData(comment, DataStatus.TRANSIENT);
+    ActivityData commentData = new InMemoryActivityData(comment, DataStatus.TRANSIENT);
     activityCache.put(commentKey, commentData);
   }
 
@@ -77,25 +78,29 @@ public class CachedListener<M extends ExoSocialActivity> extends DataChangeListe
   public void onRemoveActivity(ExoSocialActivity activity) {
     ActivityKey key = ActivityUtils.key(activity);
     ActivityData data = activityCache.get(key);
-    if (data != null && data.getStatus().equals(DataStatus.REMOVED)) {
+    if (ActivityUtils.getDataStatus(data).equals(DataStatus.REMOVED)) {
       return;
+    } else if (!ActivityUtils.getDataStatus(data).equals(DataStatus.TRANSIENT)) {
+      //in the case, if status != transient, that means it had been persisted in the past
+      // it must be deleted so far
+      //Otherwise, don't update its status.
+      ActivityUtils.setDataStatus(data, DataStatus.REMOVED);
     }
-    data.setStatus(DataStatus.REMOVED);
   }
   
   @Override
   public void onRemoveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
     ActivityKey key = ActivityUtils.key(activity);
-    ActivityData data = new ActivityData(activity, DataStatus.CHANGED);
+    ActivityData data = new InMemoryActivityData(activity, DataStatus.CHANGED);
     activityCache.put(key, data);
     
     // comment
     ActivityKey commentKey = ActivityUtils.key(comment);
     ActivityData commentData = activityCache.get(commentKey);
-    if (commentData != null && commentData.getStatus().equals(DataStatus.REMOVED)) {
+    if (ActivityUtils.getDataStatus(data).equals(DataStatus.REMOVED)) {
       return;
     } else {
-      commentData.setStatus(DataStatus.REMOVED);
+      ActivityUtils.setDataStatus(commentData, DataStatus.REMOVED);
     }
   }
 
@@ -103,7 +108,8 @@ public class CachedListener<M extends ExoSocialActivity> extends DataChangeListe
   public void onUpdate(ExoSocialActivity activity) {
     ActivityKey key = ActivityUtils.key(activity);
     ActivityData data = activityCache.get(key);
-    if (data != null && data.getStatus().equals(DataStatus.REMOVED)) {
+    //handles when multi-browser delete the activity
+    if (ActivityUtils.getDataStatus(data).equals(DataStatus.REMOVED)) {
       return;
     }
     
@@ -126,8 +132,9 @@ public class CachedListener<M extends ExoSocialActivity> extends DataChangeListe
       CommonsUtils.getService(ActivityStorageImpl.class).processActivity(activity);
     }
     
-    ActivityData updated = new ActivityData(activity, DataStatus.CHANGED);
-    DataModel model = data.buildModel();
+    ActivityData updated = new InMemoryActivityData(activity, DataStatus.CHANGED);
+    ExoSocialActivity newA = data.build();
+    DataModel model = ActivityUtils.buildModel(ActivityUtils.revision(newA), data.getId(), data.getParentId());
     //
     model.param(DataModel.ACTIVITY_BODY, newBodyChanged);
     model.param(DataModel.ACTIVITY_TITLE, newTitleChanged);

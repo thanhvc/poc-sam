@@ -19,6 +19,7 @@ package org.exoplatform.social.core.storage.cache.model.data;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.exoplatform.social.core.storage.listener.StreamFixedSizeListener;
 
 
@@ -61,15 +62,17 @@ public class ActivitiesFixedListData extends AbstractFixedSizeListData<String> {
   
   @Override
   public void insertFirst(String id, StreamFixedSizeListener listener) {
-    int position = this.dataKeys.indexOf(id);
-    if (position > 0) {
-      this.dataKeys.remove(position);
-      this.dataKeys.offerFirst(id);
-    } else if (position == -1) {
-      this.dataKeys.offerFirst(id);
+    synchronized (dataKeys) {
+      int position = this.dataKeys.indexOf(id);
+      if (position > 0) {
+        this.dataKeys.remove(position);
+        this.dataKeys.offerFirst(id);
+      } else if (position == -1) {
+        this.dataKeys.offerFirst(id);
+      }
+      
+      maintainFixedSize(listener);
     }
-    
-    maintainFixedSize(listener);
   }
   
   /**
@@ -100,12 +103,14 @@ public class ActivitiesFixedListData extends AbstractFixedSizeListData<String> {
   
   @Override
   public void insertLast(String id) {
-    if (canAddMore()) {
-      int position = this.dataKeys.indexOf(id);
-      if (position > -1 && position < dataKeys.size() - 1) {
-        this.dataKeys.remove(position);
+    synchronized (dataKeys) {
+      if (canAddMore()) {
+        int position = this.dataKeys.indexOf(id);
+        if (position > -1 && position < dataKeys.size() - 1) {
+          this.dataKeys.remove(position);
+        }
+        this.dataKeys.offerLast(id);
       }
-      this.dataKeys.offerLast(id);
     }
   }
   
@@ -118,8 +123,10 @@ public class ActivitiesFixedListData extends AbstractFixedSizeListData<String> {
 
   @Override
   public List<String> subList(int offset, int limit) {
-    int to = Math.min(this.dataKeys.size(), offset + limit);
-    return this.dataKeys.subList(offset, to);
+    synchronized (dataKeys) {
+      int to = Math.min(this.dataKeys.size(), offset + limit);
+      return this.dataKeys.subList(offset, to);
+    }
   }
   
   /**

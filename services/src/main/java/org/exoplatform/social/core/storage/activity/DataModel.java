@@ -28,7 +28,7 @@ import org.exoplatform.social.core.listeners.Callback;
  *          exo@exoplatform.com
  * Mar 12, 2014  
  */
-public class DataModel {
+public class DataModel extends Version {
   
   public static String ACTIVITY_BODY = "activity_body";
   public static String ACTIVITY_TITLE = "activity_title";
@@ -42,19 +42,20 @@ public class DataModel {
   
   private Map<String, String> temporaryParams;
 
-  public static Builder init(String handle, String parentId, Callback callback) {
-    return new Builder(handle, parentId, callback);
+  public static Builder init(long revision, String handle, String parentId, Callback callback) {
+    return new Builder(revision, handle, parentId, callback);
   }
   
-  public static Builder init(String handle, Callback callback) {
-    return init(handle, null, callback);
+  public static Builder init(long revision, String handle, Callback callback) {
+    return init(revision, handle, null, callback);
   }
   
-  public static Builder init(String handle) {
-    return init(handle, null, null);
+  public static Builder init(long revision, String handle) {
+    return init(revision, handle, null, null);
   }
 
   public DataModel(Builder builder) {
+    super(builder.revision);
     this.handle = builder.handle;
     this.parentId = builder.parentId;
     this.callback = builder.callback;
@@ -110,11 +111,13 @@ public class DataModel {
     public final String parentId;
     public final Callback callback;
     public boolean isLazyCreated = false;
+    public final Long revision;
     
-    public Builder(String handle, String parentId, Callback callback) {
+    public Builder(Long revision, String handle, String parentId, Callback callback) {
       this.handle = handle;
       this.parentId = parentId;
       this.callback = callback;
+      this.revision = revision;
     }
     
     public Builder lazyCreated(boolean isLazyCreated) {

@@ -21,9 +21,10 @@ import java.lang.reflect.Method;
 
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.storage.SOCContext;
-import org.exoplatform.social.core.storage.activity.DataStatus;
 import org.exoplatform.social.core.storage.cache.model.data.ActivityData;
+import org.exoplatform.social.core.storage.cache.model.data.DataStatus;
 import org.exoplatform.social.core.storage.cache.model.key.ActivityKey;
+import org.exoplatform.social.core.storage.memory.ActivityUtils;
 
 /**
  * Created by The eXo Platform SAS
@@ -57,7 +58,7 @@ public class ProxyInvocation implements InvocationHandler {
       } else {
         key = new ActivityKey(this.activity.getHandle());
         data = context.getActivityCache().get(key);
-        if (data.getStatus().equals(DataStatus.TRANSIENT)) {
+        if (ActivityUtils.getDataStatus(data).equals(DataStatus.TRANSIENT)) {
           return this.activity.getHandle();
         } else {
           return data.getId();

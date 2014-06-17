@@ -300,9 +300,6 @@ public class InMemoryActivityStorageImpl extends SynchronizedActivityStorage {
   }
   
   public void persistJCRActivity(ExoSocialActivity activity) throws ActivityStorageException {
-    
-    boolean created = startSynchronization();
-    
     try {
       List<String> mentioners = StorageUtils.getIdentityIds(activity.getMentionedIds());
       IdentityEntity identityEntity = _findById(IdentityEntity.class, activity.getStreamId());
@@ -350,8 +347,9 @@ public class InMemoryActivityStorageImpl extends SynchronizedActivityStorage {
       
       
       activity.setId(entity.getId());
-
+      
       getSession().save();
+      
       Identity owner = identityStorage.findIdentityById(activity.getStreamId());
       if (mustInjectStreams) {
         StreamInvocationHelper.savePoster(owner, entity);
@@ -369,8 +367,6 @@ public class InMemoryActivityStorageImpl extends SynchronizedActivityStorage {
       } else {
         throw new ActivityStorageException(ActivityStorageException.Type.FAILED_TO_UPDATE_ACTIVITY, ex.getMessage());
       }
-    } finally {
-      stopSynchronization(created);
     }
 
   }

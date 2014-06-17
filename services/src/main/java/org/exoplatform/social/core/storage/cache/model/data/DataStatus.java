@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.exoplatform.social.core.storage.activity;
+package org.exoplatform.social.core.storage.cache.model.data;
 
 /**
  * Created by The eXo Platform SAS
@@ -25,3 +25,4 @@ package org.exoplatform.social.core.storage.activity;
 public enum DataStatus {
   TRANSIENT, PERSISTENTED, REMOVED, CHANGED, NONE
 }
+

@@ -38,6 +38,8 @@ public class PersisterTask implements PersistAlgorithm, Runnable {
   private long wakeupInterval;
   /** */
   final TimeUnit timeUnit;
+  
+  private Thread thread;
 
   /** */
   ScheduledExecutorService scheduledExecutor;
@@ -49,11 +51,13 @@ public class PersisterTask implements PersistAlgorithm, Runnable {
     this.wakeupInterval = builder.wakeupInterval;
     this.persister = builder.persister;
     this.timeUnit = builder.timeUnit == null ? TimeUnit.MILLISECONDS : builder.timeUnit;
+    thread = new Thread(this);
+    thread.setPriority(Thread.MIN_PRIORITY);
   }
 
   public void start() {
     scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutor.scheduleWithFixedDelay(this, wakeupInterval / 2, wakeupInterval, this.timeUnit);
+    scheduledExecutor.scheduleWithFixedDelay(thread, wakeupInterval / 2, wakeupInterval, this.timeUnit);
   }
   
   public void stop() {

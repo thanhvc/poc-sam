@@ -25,11 +25,13 @@ import org.exoplatform.social.core.listeners.Callback;
 import org.exoplatform.social.core.storage.SOCContext;
 import org.exoplatform.social.core.storage.activity.DataChangeListener;
 import org.exoplatform.social.core.storage.activity.DataModel;
-import org.exoplatform.social.core.storage.activity.DataStatus;
 import org.exoplatform.social.core.storage.cache.model.data.ActivitiesFixedListData;
 import org.exoplatform.social.core.storage.cache.model.data.ActivityData;
+import org.exoplatform.social.core.storage.cache.model.data.DataStatus;
+import org.exoplatform.social.core.storage.cache.model.data.InMemoryActivityData;
 import org.exoplatform.social.core.storage.cache.model.key.ActivityKey;
 import org.exoplatform.social.core.storage.cache.model.key.NewListActivitiesKey;
+import org.exoplatform.social.core.storage.memory.ActivityUtils;
 import org.exoplatform.social.core.storage.memory.InMemoryActivityStorageImpl;
 import org.exoplatform.social.core.storage.proxy.ActivityProxyBuilder;
 
@@ -65,7 +67,7 @@ public class PersisterListener implements DataChangeListener<DataModel> {
   public void onAddActivity(DataModel target) {
     ActivityKey key = new ActivityKey(target.getHandle());
     ActivityData data = activityCache.get(key);
-    if (data != null && DataStatus.TRANSIENT.equals(data.getStatus())) {
+    if (data != null && DataStatus.TRANSIENT.equals(ActivityUtils.getDataStatus(data))) {
       ExoSocialActivity a = data.build();
       if (a.isLazyCreated()) {
         this.storage.persistJCRActivity(a);
@@ -73,8 +75,8 @@ public class PersisterListener implements DataChangeListener<DataModel> {
         this.storage.persistActivity(a);
       }
       //
-      data = new ActivityData(a);
-      data.setStatus(DataStatus.PERSISTENTED);
+      data = new InMemoryActivityData(a);
+      ActivityUtils.setDataStatus(data, DataStatus.PERSISTENTED);
       activityCache.put(key, data);
       //invoke activity life-cycle to create notification or something like that.
       activityLifeCycle.saveActivity(a);
@@ -105,7 +107,7 @@ public class PersisterListener implements DataChangeListener<DataModel> {
   public void onUpdate(DataModel activity) {
     ActivityKey key = new ActivityKey(activity.getHandle());
     ActivityData data = activityCache.get(key);
-    if (data != null && DataStatus.CHANGED.equals(data.getStatus())) {
+    if (data != null && DataStatus.CHANGED.equals(ActivityUtils.getDataStatus(data))) {
       
       ExoSocialActivity changedActivity = data.build();
       if (!changedActivity.isComment()) {
@@ -114,7 +116,7 @@ public class PersisterListener implements DataChangeListener<DataModel> {
       }
      
       this.storage.updateActivity(changedActivity);
-      data.setStatus(DataStatus.PERSISTENTED);
+      ActivityUtils.setDataStatus(data, DataStatus.PERSISTENTED);
     }
   }
 
@@ -122,7 +124,7 @@ public class PersisterListener implements DataChangeListener<DataModel> {
   public void onAddComment(DataModel activity, DataModel comment) {
     ActivityKey key = new ActivityKey(comment.getHandle());
     ActivityData data = activityCache.get(key);
-    if (data != null && DataStatus.TRANSIENT.equals(data.getStatus())) {
+    if (data != null && DataStatus.TRANSIENT.equals(ActivityUtils.getDataStatus(data))) {
       ExoSocialActivity newComment = data.build();
       if (newComment.isComment()) {
         //
@@ -137,7 +139,7 @@ public class PersisterListener implements DataChangeListener<DataModel> {
             this.storage.persistComment(parent.build(), newComment);
           }
         }
-        data = new ActivityData(newComment, DataStatus.PERSISTENTED);
+        data = new InMemoryActivityData(newComment, DataStatus.PERSISTENTED);
         activityCache.put(key, data);
         //invoke activity life-cycle to create notification or something like that.
         activityLifeCycle.saveComment(newComment);
@@ -149,10 +151,10 @@ public class PersisterListener implements DataChangeListener<DataModel> {
   public void onLike(DataModel activity) {
     ActivityKey key = new ActivityKey(activity.getHandle());
     ActivityData data = activityCache.get(key);
-    if (data != null && DataStatus.CHANGED.equals(data.getStatus())) {
+    if (data != null && DataStatus.CHANGED.equals(ActivityUtils.getDataStatus(data))) {
       ExoSocialActivity changedActivity = data.build();
       this.storage.persistLikeOrUnlike(changedActivity);
-      data.setStatus(DataStatus.PERSISTENTED);
+      ActivityUtils.setDataStatus(data, DataStatus.PERSISTENTED);
       //invoke activity life-cycle to create notification or something like that.
       activityLifeCycle.likeActivity(changedActivity);
     }
@@ -162,10 +164,10 @@ public class PersisterListener implements DataChangeListener<DataModel> {
   public void onUnlike(DataModel activity) {
     ActivityKey key = new ActivityKey(activity.getHandle());
     ActivityData data = activityCache.get(key);
-    if (data != null && DataStatus.CHANGED.equals(data.getStatus())) {
+    if (data != null && DataStatus.CHANGED.equals(ActivityUtils.getDataStatus(data))) {
       ExoSocialActivity changedActivity = data.build();
       this.storage.persistLikeOrUnlike(changedActivity);
-      data.setStatus(DataStatus.PERSISTENTED);
+      ActivityUtils.setDataStatus(data, DataStatus.PERSISTENTED);
     }
   }
 
@@ -173,14 +175,14 @@ public class PersisterListener implements DataChangeListener<DataModel> {
   public void onRemoveComment(DataModel activity, DataModel comment) {
     ActivityKey commentKey = new ActivityKey(comment.getHandle());
     ActivityData commentData = activityCache.get(commentKey);
-    if (commentData != null && DataStatus.REMOVED.equals(commentData.getStatus())) {
+    if (commentData != null && DataStatus.REMOVED.equals(ActivityUtils.getDataStatus(commentData))) {
       ExoSocialActivity newComment = commentData.build();
       if (newComment.isComment()) {
         //
         ActivityData parent =  activityCache.get(new ActivityKey(activity.getHandle()));
         this.storage.deleteActivity(newComment.getId());
         this.storage.persistAddOrRemoveComment(parent.build());
-        parent.setStatus(DataStatus.PERSISTENTED);
+        ActivityUtils.setDataStatus(parent, DataStatus.PERSISTENTED);
         //TODO need to update Activity here
         activityCache.remove(commentKey);
       }

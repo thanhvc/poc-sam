@@ -51,7 +51,7 @@ public abstract class GraphContext<H, V extends Vertex<H>, E extends Edge<H, V>>
    * @return the context
    */
   public VertexContext<H, V, E> addVertex(V vertex) {
-    return this.rootVertex.insertLast(vertex);
+    return this.rootVertex.insert(vertex);
   }
   
   /**
@@ -60,7 +60,7 @@ public abstract class GraphContext<H, V extends Vertex<H>, E extends Edge<H, V>>
    * @return
    */
   public V addVertex(H handle) {
-    return this.rootVertex.add(null, handle).vertex;
+    return this.rootVertex.add(handle).vertex;
   }
   
   /**
@@ -136,6 +136,15 @@ public abstract class GraphContext<H, V extends Vertex<H>, E extends Edge<H, V>>
    */
   public <T> V getVertex(H name) {
     return this.rootVertex.getVertex(name);
+  }
+  
+  /**
+   * Returns TRUE if the vertex has been added in the graph
+   * @param name the specified handle name
+   * @return TRUE/FALSE
+   */
+  public boolean contains(H name) {
+    return this.rootVertex.contains(name);
   }
   
   /**

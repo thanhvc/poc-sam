@@ -16,8 +16,7 @@
  */
 package org.exoplatform.social.common.graph;
 
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by The eXo Platform SAS
@@ -26,7 +25,7 @@ import java.util.LinkedList;
  * Mar 22, 2014  
  */
 @SuppressWarnings("serial")
-public class VertexContext<H, V extends Vertex<H>, E extends Edge<H, V>> extends LinkedList<VertexContext<H, V, E>> {
+public class VertexContext<H, V extends Vertex<H>, E extends Edge<H, V>> extends ConcurrentHashMap<H, VertexContext<H, V, E>> {
   /** */
   final H handle;
   
@@ -56,67 +55,19 @@ public class VertexContext<H, V extends Vertex<H>, E extends Edge<H, V>> extends
     return this.handle;
   }
   
-  public <T> VertexContext<H, V, E> get(Object handle) throws NullPointerException {
-    if (handle == null) {
-      throw new NullPointerException();
-    }
-    Iterator<VertexContext<H, V, E>> it = iterator();
-    
-    Class<?> inputType = handle.getClass();
-    //cast the value by type
-    //T v = type.cast(handle);
-
-    while(it.hasNext()) {
-      VertexContext<H, V, E> context = it.next();
-      if (inputType.equals(context.keyType)) {
-        if (context.handle.equals(handle)) {
-          return context;
-        }
-      }
-    }
-    
-    return null;
-  }
-  
-  public <T> int indexOf(Class<T> type, Object handle) throws NullPointerException {
-    if (handle == null) {
-      throw new NullPointerException();
-    }
-    Iterator<VertexContext<H, V, E>> it = iterator();
-    
-    //cast the value by type
-    T v = type.cast(handle);
-    int i = 0;
-    while(it.hasNext()) {
-      VertexContext<H, V, E> context = it.next();
-      if (type.equals(context.keyType)) {
-        T v1 = type.cast(context.handle);
-        if (v1.equals(v)) {
-          break;
-        }
-      }
-      
-      i++;
-    }
-    
-  
-
-    return i;
-  }
-  
   /**
    * Inserts the NodeData into the last position
    * @param data
    * @return
    */
-  public VertexContext<H, V, E> insertLast(V vertex) {
+  public VertexContext<H, V, E> insert(V vertex) {
     if (vertex == null) {
       throw new NullPointerException("Vertex must not be null.");
     }
     
     //
     VertexContext<H, V, E> context = new VertexContext<H, V, E>(graph, vertex);
-    addLast(context);
+    put(vertex.handle, context);
     return context;
   }
   
@@ -134,25 +85,8 @@ public class VertexContext<H, V extends Vertex<H>, E extends Edge<H, V>> extends
    * @throws NullPointerException
    */
   public <T> V getVertex(H handle) throws NullPointerException {
-    VertexContext<H, V, E> found = get(handle);
+    VertexContext<H, V, E> found = this.get(handle);
     return found == null ? null : found.vertex;
-  }
-  
-  public V getVertex(int index) {
-    if (index < 0) {
-      throw new IndexOutOfBoundsException("Index " + index + " cannot be negative");
-    }
-
-    VertexContext<H, V, E> context = getFirst();
-    while (context != null && index-- > 0) {
-      context = context.element();
-    }
-
-    if (context == null) {
-      throw new IndexOutOfBoundsException("Index " + index + " is out of bounds");
-    } else {
-      return context.vertex;
-    }
   }
   
   /**
@@ -179,7 +113,7 @@ public class VertexContext<H, V extends Vertex<H>, E extends Edge<H, V>> extends
    */
   public boolean removeVertex(VertexContext<H, V, E> vertex) throws IllegalStateException {
     try {
-      this.remove(vertex);
+      this.remove(vertex.getHandle());
       return true;
     } catch (Exception ex) {
       ex.printStackTrace();
@@ -189,7 +123,6 @@ public class VertexContext<H, V extends Vertex<H>, E extends Edge<H, V>> extends
   
   /**
    * Adds the vertex given the name
-   * @param index the index value
    * @param handle the handle of the vertex
    * 
    * @return the context
@@ -198,19 +131,14 @@ public class VertexContext<H, V extends Vertex<H>, E extends Edge<H, V>> extends
    * @throws IndexOutOfBoundsException
    * @throws IllegalStateException
    */
-  public <T> VertexContext<H, V, E> add(Integer index, H handle) throws NullPointerException, IndexOutOfBoundsException, IllegalStateException {
+  public <T> VertexContext<H, V, E> add(H handle) throws NullPointerException, IndexOutOfBoundsException, IllegalStateException {
     if (handle == null) {
       throw new NullPointerException("No null name accepted");
     }
     
     VertexContext<H, V, E> context = new VertexContext<H, V, E>(graph, handle);
-    
     //
-    if (index == null) {
-      addFirst(context);  
-    } else {
-      add(index, context);
-    }
+    put(handle, context);  
     return context;
   }
   

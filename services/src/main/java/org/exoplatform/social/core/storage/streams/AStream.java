@@ -96,8 +96,15 @@ public abstract class AStream implements StreamFixedSizeListener {
   @Override
   public void update(String inVertexId, String outVertexId) {
     SimpleUndirectGraph graph = this.socContext.getActivityCacheGraph();
-    Vertex<Object> inVertex = graph.getVertex(inVertexId);
-    Vertex<Object> outVertex = graph.getVertex(outVertexId);
+    Vertex<Object> inVertex = null;
+    if (graph.contains(inVertexId)) {
+      inVertex = graph.getVertex(inVertexId);
+    } 
+    
+    Vertex<Object> outVertex = null;
+    if (graph.contains(outVertexId)) {
+      outVertex = graph.getVertex(outVertexId);
+    }
     
     if (inVertex != null && outVertex != null) {
       graph.removeEdge(inVertex, outVertex);
@@ -137,23 +144,25 @@ public abstract class AStream implements StreamFixedSizeListener {
     public void doExecute() {
       SimpleUndirectGraph graph = this.socContext.getActivityCacheGraph();
       
-      Vertex<Object> inVertex;
-      Vertex<Object> outVertex;
+      Vertex<Object> inVertex = null;
+      Vertex<Object> outVertex = null;
       boolean shouldCreateEdge = false;
       //
       for (ActivityRefKey refKey : keys) {
         NewListActivitiesKey cacheKey = refKey.listActivitiesKey();
          //in vertex create or not
-        inVertex = graph.getVertex(refKey.handle);
-        if (inVertex == null) {
+        if (!graph.contains(refKey.handle)) {
           inVertex = graph.addVertex(refKey.handle);
           shouldCreateEdge = true;
+        } else {
+          inVertex = graph.getVertex(refKey.handle);
         }
         //out vertex create or not
-        outVertex = graph.getVertex(cacheKey);
-        if (outVertex == null) {
+        if (!graph.contains(cacheKey)) {
           outVertex = graph.addVertex(cacheKey);
           shouldCreateEdge = true;
+        } else {
+          outVertex = graph.getVertex(cacheKey);
         }
         
         if (shouldCreateEdge) {

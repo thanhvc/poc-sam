@@ -103,7 +103,8 @@ public class SimpleActivityListener<M extends ExoSocialActivity> extends Abstrac
     cacheCounterListener.onAddActivity(activity);
     //
     String handle = ActivityUtils.handle(activity);
-    this.dataContext.addActivity(DataModel.init(handle).build());
+    long revision = ActivityUtils.revision(activity);
+    this.dataContext.addActivity(DataModel.init(revision, handle).build());
     commit(false);
   }
   
@@ -117,7 +118,8 @@ public class SimpleActivityListener<M extends ExoSocialActivity> extends Abstrac
     cacheCounterListener.onAddActivity(activity);
     //
     String handle = ActivityUtils.handle(activity);
-    this.dataContext.addActivity(DataModel.init(handle, callback).lazyCreated(activity.isLazyCreated()).build());
+    long revision = ActivityUtils.revision(activity);
+    this.dataContext.addActivity(DataModel.init(revision, handle, callback).lazyCreated(activity.isLazyCreated()).build());
     commit(false);
   }
 
@@ -128,8 +130,10 @@ public class SimpleActivityListener<M extends ExoSocialActivity> extends Abstrac
     relationshipListener.onAddComment(activity, comment);
     //
     String handle = ActivityUtils.handle(comment);
-    this.dataContext.addComment(DataModel.init(activity.getId()).build(),
-                                DataModel.init(handle).lazyCreated(comment.isLazyCreated()).build());
+    long revisionActivity = ActivityUtils.revision(activity);
+    long revisionComment = ActivityUtils.revision(comment);
+    this.dataContext.addComment(DataModel.init(revisionActivity, activity.getId()).build(),
+                                DataModel.init(revisionComment, handle).lazyCreated(comment.isLazyCreated()).build());
     commit(false);
   }
   
@@ -139,8 +143,10 @@ public class SimpleActivityListener<M extends ExoSocialActivity> extends Abstrac
     streamUpdateListener.onUpdate(activity);
     //
     String handle = ActivityUtils.handle(comment);
-    this.dataContext.addComment(DataModel.init(activity.getId()).build(),
-                                DataModel.init(handle, callback).build());
+    long revisionActivity = ActivityUtils.revision(activity);
+    long revisionComment = ActivityUtils.revision(comment);
+    this.dataContext.addComment(DataModel.init(revisionActivity, activity.getId()).build(),
+                                DataModel.init(revisionComment, handle, callback).build());
     
     commit(false);
   }
@@ -148,21 +154,24 @@ public class SimpleActivityListener<M extends ExoSocialActivity> extends Abstrac
   @Override
   public void onUpdateActivity(M activity) {
     cachedListener.onUpdate(activity);
-    this.dataContext.update(DataModel.init(activity.getId()).build());
+    long revision = ActivityUtils.revision(activity);
+    this.dataContext.update(DataModel.init(revision, activity.getId()).build());
     commit(false);
   }
   
   @Override
   public void onLikeActivity(M activity) {
     cachedListener.onUpdate(activity);
-    this.dataContext.like(DataModel.init(activity.getId()).build());
+    long revision = ActivityUtils.revision(activity);
+    this.dataContext.like(DataModel.init(revision, activity.getId()).build());
     commit(false);
   }
   
   @Override
   public void onUnlikeActivity(M activity) {
     cachedListener.onUpdate(activity);
-    this.dataContext.unLike(DataModel.init(activity.getId()).build());
+    long revision = ActivityUtils.revision(activity);
+    this.dataContext.unLike(DataModel.init(revision, activity.getId()).build());
     commit(false);
   }
 
@@ -170,7 +179,8 @@ public class SimpleActivityListener<M extends ExoSocialActivity> extends Abstrac
   public void onRemoveActivity(M activity) {
     cachedListener.onRemoveActivity(activity);
     graphListener.onRemoveActivity(activity);
-    this.dataContext.removeActivity(DataModel.init(activity.getId()).build());
+    long revision = ActivityUtils.revision(activity);
+    this.dataContext.removeActivity(DataModel.init(revision, activity.getId()).build());
     commit(false);
     
   }
@@ -180,8 +190,10 @@ public class SimpleActivityListener<M extends ExoSocialActivity> extends Abstrac
     //cachedListener.onUpdate(activity);
     cachedListener.onRemoveComment(activity, comment);
     //mentionerListener.onRemoveComment(activity, comment);
-    this.dataContext.removeComment(DataModel.init(activity.getId()).build(),
-                                   DataModel.init(comment.getId()).build());
+    long revisionActivity = ActivityUtils.revision(activity);
+    long revisionComment = ActivityUtils.revision(comment);
+    this.dataContext.removeComment(DataModel.init(revisionActivity, activity.getId()).build(),
+                                   DataModel.init(revisionComment, comment.getId()).build());
     
     commit(false);
   }

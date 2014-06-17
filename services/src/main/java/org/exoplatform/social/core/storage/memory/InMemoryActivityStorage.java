@@ -27,7 +27,6 @@ import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.storage.ActivityStorageException;
 import org.exoplatform.social.core.storage.SOCContext;
-import org.exoplatform.social.core.storage.activity.DataStatus;
 import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.exoplatform.social.core.storage.cache.CacheType;
 import org.exoplatform.social.core.storage.cache.CachedActivityStorage;
@@ -38,6 +37,7 @@ import org.exoplatform.social.core.storage.cache.StreamCacheType;
 import org.exoplatform.social.core.storage.cache.loader.ServiceContext;
 import org.exoplatform.social.core.storage.cache.model.data.ActivitiesFixedListData;
 import org.exoplatform.social.core.storage.cache.model.data.ActivityData;
+import org.exoplatform.social.core.storage.cache.model.data.DataStatus;
 import org.exoplatform.social.core.storage.cache.model.key.ActivityKey;
 import org.exoplatform.social.core.storage.cache.model.key.ActivityType;
 import org.exoplatform.social.core.storage.cache.model.key.NewListActivitiesKey;
@@ -117,7 +117,7 @@ public class InMemoryActivityStorage extends CachedActivityStorage implements Ac
         },
         key);
 
-    return DataStatus.REMOVED.equals(data.getStatus()) ? null : data.build();
+    return DataStatus.REMOVED.equals(ActivityUtils.getDataStatus(data)) ? null : data.build();
   }
   
   @Override

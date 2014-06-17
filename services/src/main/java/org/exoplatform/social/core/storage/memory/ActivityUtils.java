@@ -19,6 +19,10 @@ package org.exoplatform.social.core.storage.memory;
 import java.lang.ref.SoftReference;
 
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.storage.activity.DataModel;
+import org.exoplatform.social.core.storage.cache.model.data.ActivityData;
+import org.exoplatform.social.core.storage.cache.model.data.DataStatus;
+import org.exoplatform.social.core.storage.cache.model.data.InMemoryActivityData;
 import org.exoplatform.social.core.storage.cache.model.key.ActivityKey;
 
 /**
@@ -48,6 +52,15 @@ public class ActivityUtils {
   public static String handle(ExoSocialActivity activity) {
     return activity.isLazyCreated() ? activity.getHandle() : activity.getId();
   }
+  
+  /**
+   * Gets the revision of the activity
+   * @param activity the given activity
+   * @return the revision
+   */
+  public static long revision(ExoSocialActivity activity) {
+    return activity.getUpdated() != null ? activity.getUpdated().getTime() : activity.getPostedTime();
+  }
   /**
    * Compares oldDate and newDate.
    * 
@@ -68,6 +81,44 @@ public class ActivityUtils {
    */
   public static <T> SoftReference<T> softReference(T value) {
     return new SoftReference<T>(value);
+  }
+  
+  /**
+   * Build DataModel
+   * @param activityId
+   * @param parentId
+   * @return
+   */
+  public static DataModel buildModel(long revision, String activityId, String parentId) {
+    return DataModel.init(revision, activityId, parentId, null).build();
+  }
+  
+  /**
+   * Gets DataStatus from the ActivityData
+   * 
+   * @param data the ActivityData
+   * @return The dataa status
+   */
+  public static DataStatus getDataStatus(ActivityData data) {
+    if (data != null && data instanceof InMemoryActivityData) {
+      InMemoryActivityData memoryData = (InMemoryActivityData) data;
+      return memoryData.getStatus();
+    }
+    
+    return DataStatus.PERSISTENTED;
+  }
+  
+  /**
+   * Sets the DataStatus to the ActivityData
+   * 
+   * @param data
+   * @param status
+   */
+  public static void setDataStatus(ActivityData data, DataStatus status) {
+    if (data != null && data instanceof InMemoryActivityData) {
+      InMemoryActivityData memoryData = (InMemoryActivityData) data;
+      memoryData.setStatus(status);
+    }
   }
 
 }
