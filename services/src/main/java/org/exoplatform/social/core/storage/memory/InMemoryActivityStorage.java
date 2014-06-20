@@ -140,10 +140,6 @@ public class InMemoryActivityStorage extends CachedActivityStorage implements Ac
     }
   }
   
-  @Override
-  public void deleteActivity(final String activityId) throws ActivityStorageException {
-  }
-  
   public void deleteComment(ExoSocialActivity activity, ExoSocialActivity comment) throws ActivityStorageException {
     this.getStorageImpl().removeComment(activity, comment);
   }

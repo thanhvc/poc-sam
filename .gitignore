@@ -45,3 +45,7 @@ pom.xml.versionsBackup
 *.log
 rebel.xml
 transaction.log
+
+#Eclipse project
+.classpath
+*.project

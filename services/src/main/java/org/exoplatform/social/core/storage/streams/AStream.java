@@ -93,6 +93,10 @@ public abstract class AStream implements StreamFixedSizeListener {
     return this;
   }
   
+  public List<ActivityRefKey> getKeys() {
+    return keys;
+  }
+
   @Override
   public void update(String inVertexId, String outVertexId) {
     SimpleUndirectGraph graph = this.socContext.getActivityCacheGraph();
@@ -166,7 +170,7 @@ public abstract class AStream implements StreamFixedSizeListener {
         }
         
         if (shouldCreateEdge) {
-          graph.addEdge(refKey.handle(), inVertex, outVertex);
+          graph.addEdge(refKey.edgeHandle(), inVertex, outVertex);
         }
         
       }

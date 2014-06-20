@@ -67,7 +67,7 @@ public class PersisterListener implements DataChangeListener<DataModel> {
   public void onAddActivity(DataModel target) {
     ActivityKey key = new ActivityKey(target.getHandle());
     ActivityData data = activityCache.get(key);
-    if (data != null && DataStatus.TRANSIENT.equals(ActivityUtils.getDataStatus(data))) {
+    if (data != null) {
       ExoSocialActivity a = data.build();
       if (a.isLazyCreated()) {
         this.storage.persistJCRActivity(a);

@@ -50,7 +50,7 @@ public final class ActivityRefKey extends Version {
    * returns the key of activity reference
    * @return
    */
-  public String handle() {
+  public String edgeHandle() {
     return String.format("%s_%s_%s", this.identityId, this.identityId, this.type);
   }
   

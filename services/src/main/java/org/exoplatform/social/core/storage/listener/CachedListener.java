@@ -53,7 +53,7 @@ public class CachedListener<M extends ExoSocialActivity> extends DataChangeListe
   @Override
   public void onAddActivity(ExoSocialActivity activity) {
     ActivityKey key = ActivityUtils.key(activity);
-    ActivityData data = new InMemoryActivityData(activity, DataStatus.TRANSIENT);
+    ActivityData data = new InMemoryActivityData(activity, activity.isLazyCreated() ? DataStatus.TRANSIENT : DataStatus.CHANGED);
     activityCache.put(key, data);
   }
   
@@ -80,10 +80,12 @@ public class CachedListener<M extends ExoSocialActivity> extends DataChangeListe
     ActivityData data = activityCache.get(key);
     if (ActivityUtils.getDataStatus(data).equals(DataStatus.REMOVED)) {
       return;
-    } else if (!ActivityUtils.getDataStatus(data).equals(DataStatus.TRANSIENT)) {
+    } else if (ActivityUtils.getDataStatus(data).equals(DataStatus.TRANSIENT)) {
       //in the case, if status != transient, that means it had been persisted in the past
       // it must be deleted so far
       //Otherwise, don't update its status.
+      activityCache.remove(key);
+    } else {
       ActivityUtils.setDataStatus(data, DataStatus.REMOVED);
     }
   }
@@ -97,7 +99,7 @@ public class CachedListener<M extends ExoSocialActivity> extends DataChangeListe
     // comment
     ActivityKey commentKey = ActivityUtils.key(comment);
     ActivityData commentData = activityCache.get(commentKey);
-    if (ActivityUtils.getDataStatus(data).equals(DataStatus.REMOVED)) {
+    if (ActivityUtils.getDataStatus(commentData).equals(DataStatus.REMOVED)) {
       return;
     } else {
       ActivityUtils.setDataStatus(commentData, DataStatus.REMOVED);

@@ -144,7 +144,7 @@ public abstract class GraphContext<H, V extends Vertex<H>, E extends Edge<H, V>>
    * @return TRUE/FALSE
    */
   public boolean contains(H name) {
-    return this.rootVertex.contains(name);
+    return this.rootVertex.containsKey(name);
   }
   
   /**
