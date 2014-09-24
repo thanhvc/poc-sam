@@ -353,7 +353,7 @@ public class InMemoryActivityStorageImpl extends SynchronizedActivityStorage {
       Identity owner = identityStorage.findIdentityById(activity.getStreamId());
       if (mustInjectStreams) {
         StreamInvocationHelper.savePoster(owner, entity);
-        StreamInvocationHelper.save(owner, activity, mentioners.toArray(new String[0]));
+        StreamInvocationHelper.save(owner, entity, mentioners.toArray(new String[0]));
       }
     }
     catch (NodeNotFoundException e) {
@@ -403,7 +403,7 @@ public class InMemoryActivityStorageImpl extends SynchronizedActivityStorage {
       Identity owner = identityStorage.findIdentityById(activity.getStreamId());
       if (mustInjectStreams) {
         StreamInvocationHelper.savePoster(owner, entity);
-        StreamInvocationHelper.save(owner, activity, mentioners.toArray(new String[0]));
+        StreamInvocationHelper.save(owner, entity, mentioners.toArray(new String[0]));
       }
     }
     catch (NodeNotFoundException e) {
@@ -590,10 +590,17 @@ public class InMemoryActivityStorageImpl extends SynchronizedActivityStorage {
       List<String> commenters = StorageUtils.getIdentityIds(activityEntity.getCommenters());
       List<String> mentioners = StorageUtils.getIdentityIds(commentEntity.getMentioners());
       //
-      if (mustInjectStreams && ActivityUtils.afterDayOrMore(oldUpdated, currentMillis)) {
+      //
+      if (mustInjectStreams) {
         Identity identity = identityStorage.findIdentityById(comment.getUserId());
         StreamInvocationHelper.updateCommenter(identity, activityEntity, commenters.toArray(new String[0]), oldUpdated);
-        StreamInvocationHelper.update(activity, mentioners.toArray(new String[0]), oldUpdated);
+        //make sure there is no duplicated identity in commenters and mentioners list 
+        processIdentitiesList(mentioners, commenters.toArray(new String[0]));
+        StreamInvocationHelper.addMentioners(activity, mentioners.toArray(new String[0]));
+        //only update what's hot when add comment the current day after the last updated of activity
+        if (StorageUtils.afterDayOrMore(oldUpdated, currentMillis)) {
+          StreamInvocationHelper.update(activity, oldUpdated);
+        }
       }
     }  
     catch (NodeNotFoundException e) {
@@ -616,6 +623,21 @@ public class InMemoryActivityStorageImpl extends SynchronizedActivityStorage {
         comment.getId(),
         activity.getCommentedIds().length
     ));
+  }
+  
+  /**
+   * Do not remove an user in the list to be removed if this one exists in the list of existing user
+   * 
+   * @param removeIdentityIds
+   * @param existingIdentityIds
+   */
+  private void processIdentitiesList(List<String> removeIdentityIds, String[] existingIdentityIds) {
+    for (String element : existingIdentityIds) {
+      String identityId = element.split(MENTION_CHAR)[0];
+      if (removeIdentityIds.contains(identityId)) {
+        removeIdentityIds.remove(identityId);
+      }
+    }
   }
   
   /**
@@ -650,12 +672,18 @@ public class InMemoryActivityStorageImpl extends SynchronizedActivityStorage {
       
       List<String> commenters = StorageUtils.getIdentityIds(activityEntity.getCommenters());
       List<String> mentioners = StorageUtils.getIdentityIds(commentEntity.getMentioners());
-      //
-      if (mustInjectStreams && ActivityUtils.afterDayOrMore(oldUpdated, commentEntity.getPostedTime())) {
-        Identity identity = identityStorage.findIdentityById(comment.getUserId());
-        StreamInvocationHelper.updateCommenter(identity, activityEntity, commenters.toArray(new String[0]), oldUpdated);
-        StreamInvocationHelper.update(activity, mentioners.toArray(new String[0]), oldUpdated);
-      }
+      
+      if (mustInjectStreams) {
+          Identity identity = identityStorage.findIdentityById(comment.getUserId());
+          StreamInvocationHelper.updateCommenter(identity, activityEntity, commenters.toArray(new String[0]), oldUpdated);
+          //make sure there is no duplicated identity in commenters and mentioners list 
+          processIdentitiesList(mentioners, commenters.toArray(new String[0]));
+          StreamInvocationHelper.addMentioners(activity, mentioners.toArray(new String[0]));
+          //only update what's hot when add comment the current day after the last updated of activity
+          if (StorageUtils.afterDayOrMore(oldUpdated, oldUpdated)) {
+            StreamInvocationHelper.update(activity, oldUpdated);
+          }
+        }
     }  
     catch (NodeNotFoundException e) {
       throw new ActivityStorageException(ActivityStorageException.Type.FAILED_TO_SAVE_COMMENT, e.getMessage(), e);

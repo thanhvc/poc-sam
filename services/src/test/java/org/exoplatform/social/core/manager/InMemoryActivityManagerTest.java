@@ -64,8 +64,6 @@ public class InMemoryActivityManagerTest extends AbstractCoreTest {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    SOCContext.instance().switchActivityMemory(true);
-    
     identityManager = (IdentityManager) getContainer().getComponentInstanceOfType(IdentityManager.class);
     activityManager = (ActivityManager) getContainer().getComponentInstanceOfType(ActivityManager.class);
     relationshipManager = (RelationshipManager) getContainer().getComponentInstanceOfType(RelationshipManager.class);

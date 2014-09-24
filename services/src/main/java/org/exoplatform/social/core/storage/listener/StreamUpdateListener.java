@@ -52,13 +52,8 @@ public class StreamUpdateListener<M extends ExoSocialActivity> extends DataChang
   }
 
   @Override
-  public void onRemoveActivity(M target) {
-    
-  }
-
-  @Override
-  public void onUpdate(M target) {
-    AStream.Builder builder = AStream.initActivity(target);
+  public void onAddComment(M activity, M comment) {
+    AStream.Builder builder = AStream.initActivity(activity);
     WHATS_HOT.init().context(socContext)
                    .feed(builder)
                    .connection(builder)

@@ -58,7 +58,7 @@ public class SOCContext implements Startable {
   static final long DEFAULT_INTERVAL_ACTIVITY_PERSIST_THRESHOLD = 20000; //20s  = 1000 x 20
   /** */
   static final long DEFAULT_ACTIVITY_LIMIT_PERSIST_THRESHOLD = 100; //number per persist storage
-  
+  /** */
   private static SOCContext instance;
   /** */
   final AStreamVersion streamUpdater;
@@ -109,7 +109,6 @@ public class SOCContext implements Startable {
     this.streamUpdater = new AStreamVersion();
     this.activityCacheGraph = new SimpleUndirectGraph(Vertex.MODEL);
     this.relationshipCacheGraph = new SimpleUndirectGraph(Vertex.MODEL);
-    
   }
   
   /**
@@ -167,6 +166,10 @@ public class SOCContext implements Startable {
     }
   }
 
+  /**
+   * Gets the data context
+   * @return
+   */
   public DataContext<DataModel> getDataContext() {
     return this.context;
   }
@@ -219,6 +222,10 @@ public class SOCContext implements Startable {
     return this.activityMemoryStatus;
   }
   
+  /**
+   * Keeping the PersisterTask in the context
+   * @param timerTask
+   */
   public void setPersisterTask(PersisterTask timerTask) {
     this.timerTask = timerTask;
   }
@@ -250,14 +257,15 @@ public class SOCContext implements Startable {
 
   @Override
   public void start() {
-    
-    ActivityManager activityManager = CommonsUtils.getService(ActivityManager.class);
-    LOG.info(activityManager.getClass().getName());
+    LOG.info("Initializing the SOC context...");
+    SOCContext.instance().switchActivityMemory(true);
   }
 
+  @SuppressWarnings("static-access")
   @Override
   public void stop() {
-    
+    LOG.info("Stopping the SOC context.");
+    this.instance = null;
   }
 
 }

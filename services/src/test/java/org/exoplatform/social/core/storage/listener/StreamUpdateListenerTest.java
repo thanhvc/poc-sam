@@ -44,7 +44,7 @@ import org.exoplatform.social.core.test.AbstractCoreTest;
  *          exo@exoplatform.com
  * Jun 20, 2014  
  */
-public class GraphListenerTest extends AbstractCoreTest {
+public class StreamUpdateListenerTest extends AbstractCoreTest {
   private final Log LOG = ExoLogger.getLogger(InMemoryActivityManagerTest.class);
   private List<ExoSocialActivity> tearDownActivityList;
   private Identity rootIdentity;
